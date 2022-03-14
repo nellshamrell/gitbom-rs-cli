@@ -1,8 +1,7 @@
 use gitbom::{HashAlgorithm, GitOid};
 use clap::Parser;
 use std::fs::File;
-use std::hash::Hash;
-use std::io::{BufReader, Read};
+use std::io::{BufReader};
 
 #[derive(Parser)]
 struct Cli {
