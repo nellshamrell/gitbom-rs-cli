@@ -2,6 +2,7 @@ use gitbom::{HashAlgorithm, GitOid};
 use clap::{Parser, Subcommand};
 use std::fs::File;
 use std::io::{BufReader};
+use std::fs;
 
 /// A GitBom CLI written in Rust
 #[derive(Parser)]
@@ -44,7 +45,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let result = new_gitoid.generate_git_oid_from_buffer(reader, file_length as usize);
 
             match result {
-                Ok(r) => println!("{:?}", r),
+                Ok(r) => {
+                    create_bom_directory()?;
+                    println!("{}", r);
+                    
+                },
                 Err(e) => println!("Error generating the GitBOM: {:?}", e),
             }
 
@@ -56,4 +61,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(())
         }
     }
+}
+
+fn create_bom_directory() -> std::io::Result<()> {
+    fs::create_dir(".bom")?;
+    Ok(())
 }
