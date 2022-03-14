@@ -11,13 +11,11 @@ struct Cli {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Cli::parse();
-    println!("args: {:?}", args.path);
 
     let file = File::open(args.path)?;
     let file_length = file.metadata()?.len();
 
     let reader = BufReader::new(file);
-    
     let new_gitoid = GitOid::new(HashAlgorithm::SHA1);
 
 
