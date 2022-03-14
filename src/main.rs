@@ -46,7 +46,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             match result {
                 Ok(r) => {
-                    create_bom_directory()?;
+                    write_gitbom(&r)?;
                     println!("{}", r);
                     
                 },
@@ -63,7 +63,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 }
 
-fn create_bom_directory() -> std::io::Result<()> {
-    fs::create_dir(".bom")?;
+fn write_gitbom(gitoid: &str) -> std::io::Result<()> {
+    let gitbom_path = format!(".bom/object/{}", gitoid);
+    fs::create_dir_all(gitbom_path)?;
     Ok(())
 }
