@@ -41,7 +41,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let reader = BufReader::new(file);
             let new_gitoid = GitOid::new(HashAlgorithm::SHA1);
 
-
             let result = new_gitoid.generate_git_oid_from_buffer(reader, file_length as usize);
 
             match result {
@@ -64,7 +63,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn write_gitbom(gitoid: &str) -> std::io::Result<()> {
-    let gitbom_path = format!(".bom/object/{}", gitoid);
-    fs::create_dir_all(gitbom_path)?;
+    let mut gitoid_directory = String::from(gitoid);
+    let rest_of_gitoid = gitoid_directory.split_off(2);
+
+    let directory_path = format!(".bom/object/{}", gitoid_directory);
+    fs::create_dir_all(directory_path)?;
+
+    let file_path = format!(".bom/object/{}/{}", gitoid_directory, rest_of_gitoid);
+    let mut gitoid_file = File::create(file_path);
+
     Ok(())
 }
