@@ -43,6 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             match result {
                 Ok(r) => {
+                    create_gitbom_directory()?;
                     write_gitbom(&r)?;
                     println!("{}", r);
                     
@@ -60,14 +61,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 }
 
+fn create_gitbom_directory() -> std::io::Result<()> {
+    let directory_path = String::from(".bom/object");
+    fs::create_dir_all(directory_path)?;
+    Ok(())
+}
+
 fn write_gitbom(gitoid: &GitOid) -> std::io::Result<()> {
     let mut gitoid_directory = gitoid.hex_hash();
+
+    println!("gitoid_directory {}", gitoid_directory);
 
     // split off everything into a new string
     // except for the first 2 chars
     let rest_of_gitoid = gitoid_directory.split_off(2);
 
     let directory_path = format!(".bom/object/{}", gitoid_directory);
+
     fs::create_dir_all(directory_path)?;
 
     let file_path = format!(".bom/object/{}/{}", gitoid_directory, rest_of_gitoid);
@@ -75,3 +85,4 @@ fn write_gitbom(gitoid: &GitOid) -> std::io::Result<()> {
 
     Ok(())
 }
+
