@@ -40,13 +40,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let file = File::open(file)?;
             let file_length = file.metadata()?.len();
             let reader = BufReader::new(file);
-            let result = GitOid::new_from_reader(HashAlgorithm::SHA1, reader, file_length as usize);
+            let generated_gitoid = GitOid::new_from_reader(HashAlgorithm::SHA1, reader, file_length as usize);
 
-            match result {
-                Ok(r) => {
+            match generated_gitoid {
+                Ok(gitoid) => {
+                    println!("Generated GitOid: {}", gitoid.hex_hash());
                     create_gitbom_directory()?;
-                    let gitoid_directories = create_gitoid_directory(&r)?;
-                    write_gitoid_file(&r, gitoid_directories)?;
+                    let gitoid_directories = create_gitoid_directory(&gitoid)?;
+                    write_gitoid_file(&gitoid, gitoid_directories)?;
                 },
                 Err(e) => println!("Error generating the GitBOM: {:?}", e),
             }
@@ -69,8 +70,6 @@ fn create_gitbom_directory() -> std::io::Result<()> {
 
 fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, String>> {
     let mut gitoid_directory = gitoid.hex_hash();
-
-    println!("gitoid_directory {}", gitoid_directory);
 
     // split off everything into a new string
     // except for the first 2 chars
