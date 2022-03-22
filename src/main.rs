@@ -2,7 +2,7 @@ use gitbom::{HashAlgorithm, GitOid};
 use clap::{Parser, Subcommand};
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{BufReader};
+use std::io::{BufReader, Write};
 use std::fs;
 
 /// A GitBom CLI written in Rust
@@ -46,7 +46,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Ok(r) => {
                     create_gitbom_directory()?;
                     let gitoid_directories = create_gitoid_directory(&r)?;
-                    write_gitoid_file(gitoid_directories)?;
+                    write_gitoid_file(&r, gitoid_directories)?;
                 },
                 Err(e) => println!("Error generating the GitBOM: {:?}", e),
             }
@@ -87,10 +87,12 @@ fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, S
     Ok(directory_strings)
 }
 
-fn write_gitoid_file(gitoid_directories: HashMap<String, String>) -> std::io::Result<()> {
+fn write_gitoid_file(gitoid: &GitOid, gitoid_directories: HashMap<String, String>) -> std::io::Result<()> {
     let file_path = format!(".bom/object/{}/{}", gitoid_directories["gitoid_shard"], gitoid_directories["rest_of_gitoid"]);
-    let _gitoid_file = File::create(file_path);
 
+    let mut gitoid_file = File::create(file_path)?;
+    let gitoid_blob_string = format!("blob {}", gitoid.hex_hash());
+    gitoid_file.write_all(gitoid_blob_string.as_bytes())?;
     Ok(())
 }
 
