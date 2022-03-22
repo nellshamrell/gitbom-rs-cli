@@ -1,5 +1,6 @@
 use gitbom::{HashAlgorithm, GitOid};
 use clap::{Parser, Subcommand};
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufReader};
 use std::fs;
@@ -44,9 +45,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             match result {
                 Ok(r) => {
                     create_gitbom_directory()?;
-                    write_gitbom(&r)?;
-                    println!("{}", r);
-                    
+                    let gitoid_directories = create_gitoid_directory(&r)?;
+                    write_gitoid_file(gitoid_directories)?;
                 },
                 Err(e) => println!("Error generating the GitBOM: {:?}", e),
             }
@@ -67,7 +67,7 @@ fn create_gitbom_directory() -> std::io::Result<()> {
     Ok(())
 }
 
-fn write_gitbom(gitoid: &GitOid) -> std::io::Result<()> {
+fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, String>> {
     let mut gitoid_directory = gitoid.hex_hash();
 
     println!("gitoid_directory {}", gitoid_directory);
@@ -75,12 +75,20 @@ fn write_gitbom(gitoid: &GitOid) -> std::io::Result<()> {
     // split off everything into a new string
     // except for the first 2 chars
     let rest_of_gitoid = gitoid_directory.split_off(2);
-
     let directory_path = format!(".bom/object/{}", gitoid_directory);
 
     fs::create_dir_all(directory_path)?;
 
-    let file_path = format!(".bom/object/{}/{}", gitoid_directory, rest_of_gitoid);
+    let directory_strings = HashMap::from([
+      (String::from("gitoid_shard"), gitoid_directory),
+      (String::from("rest_of_gitoid"), rest_of_gitoid)
+    ]);
+
+    Ok(directory_strings)
+}
+
+fn write_gitoid_file(gitoid_directories: HashMap<String, String>) -> std::io::Result<()> {
+    let file_path = format!(".bom/object/{}/{}", gitoid_directories["gitoid_shard"], gitoid_directories["rest_of_gitoid"]);
     let _gitoid_file = File::create(file_path);
 
     Ok(())
