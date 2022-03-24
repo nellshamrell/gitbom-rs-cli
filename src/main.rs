@@ -70,11 +70,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         println!("Generated GitOid: {}", gitoid.hex_hash());
                         let gitoid_directories = create_gitoid_directory(&gitoid)?;
                         write_gitoid_file(&gitoid, gitoid_directories)?;
+                        count += 1;
                     },
                     Err(e) => println!("Error generating the GitBOM: {:?}", e),
                 }
-
-                count += 1;
             }
 
             // TODO: tGenerate GitOid for the GitBom file itself?
