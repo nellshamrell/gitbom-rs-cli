@@ -39,9 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Bom { file } => {
             println!("Generating GitBOM for {}", file);
             let file = File::open(file)?;
-            let file_length = file.metadata()?.len();
-            let reader = BufReader::new(file);
-            let generated_gitoid = GitOid::new_from_reader(HashAlgorithm::SHA1, reader, file_length as usize);
+            let generated_gitoid = create_gitoid_for_file(file);
 
             match generated_gitoid {
                 Ok(gitoid) => {
@@ -74,6 +72,12 @@ fn create_gitbom_directory() -> std::io::Result<()> {
     let directory_path = String::from(".bom/object");
     fs::create_dir_all(directory_path)?;
     Ok(())
+}
+
+fn create_gitoid_for_file(file: File) -> Result<GitOid, std::io::Error> {
+    let file_length = file.metadata()?.len();
+    let reader = BufReader::new(file);
+    GitOid::new_from_reader(HashAlgorithm::SHA1, reader, file_length as usize)
 }
 
 fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, String>> {
