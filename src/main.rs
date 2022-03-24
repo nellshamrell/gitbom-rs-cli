@@ -38,13 +38,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     match &args.command {
         Commands::Bom { file } => {
             println!("Generating GitBOM for {}", file);
+            create_gitbom_directory()?;
+
             let file = File::open(file)?;
             let generated_gitoid = create_gitoid_for_file(file);
 
             match generated_gitoid {
                 Ok(gitoid) => {
                     println!("Generated GitOid: {}", gitoid.hex_hash());
-                    create_gitbom_directory()?;
                     let gitoid_directories = create_gitoid_directory(&gitoid)?;
                     write_gitoid_file(&gitoid, gitoid_directories)?;
                 },
@@ -55,13 +56,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
         Commands::ArtifactTree { directory } => {
             println!("Generating GitBOM for {}", directory);
+            create_gitbom_directory()?;
             
             let mut count = 0;
 
+            // Generate GitOids for every file within directory
+            // Then add to GitBom
             for entry in WalkDir::new(directory) {
+                let file = File::open(entry?.path())?;
+                let generated_gitoid = create_gitoid_for_file(file);
+                match generated_gitoid {
+                    Ok(gitoid) => {
+                        println!("Generated GitOid: {}", gitoid.hex_hash());
+                        let gitoid_directories = create_gitoid_directory(&gitoid)?;
+                        write_gitoid_file(&gitoid, gitoid_directories)?;
+                    },
+                    Err(e) => println!("Error generating the GitBOM: {:?}", e),
+                }
+
                 count += 1;
             }
 
+            // TODO: tGenerate GitOid for the GitBom file itself?
             println!("Generated GitBom for {} files", count);
             Ok(())
         }
