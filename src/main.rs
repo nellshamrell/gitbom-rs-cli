@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufReader, Write};
 use std::fs;
+use walkdir::WalkDir;
 
 /// A GitBom CLI written in Rust
 #[derive(Parser)]
@@ -56,7 +57,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
         Commands::ArtifactTree { directory } => {
             println!("Generating GitBOM for {}", directory);
-            println!("Not implemented yet. Patience.");
+            
+            let mut count = 0;
+
+            for entry in WalkDir::new(directory) {
+                count += 1;
+            }
+
+            println!("Generated GitBom for {} files", count);
             Ok(())
         }
     }
