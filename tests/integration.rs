@@ -37,7 +37,7 @@ fn bom_output_test() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("bom").arg("tests/fixtures/hello.txt");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("Generated GitOid: 70c379b63ffa0795fdbfbc128e5a2818397b7ef8"));
+        .stdout(predicate::str::contains("Generated GitOid: 5b2f2d4e79e6387ca9dedad500ebf70e9fb3097773252cc5b9a6d5a35a987028"));
     Ok(())
 }
 
