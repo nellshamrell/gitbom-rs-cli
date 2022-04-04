@@ -1,4 +1,4 @@
-use gitbom::{HashAlgorithm, GitBom, GitOid, Source};
+use gitbom::{HashAlgorithm, GitOid, Source};
 use clap::{Parser, Subcommand};
 use std::collections::HashMap;
 use std::fs::File;
@@ -119,21 +119,23 @@ async fn generate_async_gitbom(directory: &String) -> Result<(), Box<dyn std::er
         );
     }
 
-    let response = GitOid::new_from_async_readers(HashAlgorithm::SHA256, readers)
-        .await
-        .unwrap();
+    let gitoids_response = GitOid::new_from_async_readers(HashAlgorithm::SHA256, readers)
+        .await;
+    
 
-    let gitbom = response.into_iter().collect::<GitBom>();
-
-    let mut count = 0;
-
-    for gitoid in gitbom.get_oids() {
-        println!("Generated GitOid: {}", gitoid.hex_hash());
-        let gitoid_directories = create_gitoid_directory(&gitoid)?;
-        write_gitoid_file(&gitoid, gitoid_directories)?;
-        count += 1;
+    match gitoids_response {
+        Ok(gitoids) => {
+        let mut count = 0;
+            for gitoid in gitoids {
+                println!("Generated GitOid: {}", gitoid.hex_hash());
+                let gitoid_directories = create_gitoid_directory(&gitoid)?;
+                write_gitoid_file(&gitoid, gitoid_directories)?;
+                count += 1;
+                println!("Generated GitBom for {} files", count);
+            }
+        },
+        Err(e) => println!("Error generating the GitBOM: {:?}", e),
     }
 
-    println!("Generated GitBom for {} files", count);
     Ok(())
 }
