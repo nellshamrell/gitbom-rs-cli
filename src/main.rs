@@ -109,18 +109,27 @@ async fn generate_async_gitbom(directory: &String) -> Result<(), Box<dyn std::er
     let mut readers = Vec::new();
 
     for entry in WalkDir::new(directory) {
-        readers.push(
-            Source::new(
-                tokio::fs::File::open(entry?.path())
-                    .await
-                    .unwrap(),
-                11,
-            )
-        );
+       let entry_clone = entry?.clone();
+       let path = entry_clone.path();
+
+        if entry_clone.file_type().is_dir() {
+            continue;
+        } else {
+            readers.push(
+                Source::new(
+                    tokio::fs::File::open(path)
+                        .await
+                        .unwrap(),
+                    11,
+                )
+            );
+        }
     }
 
     let gitoids_response = GitOid::new_from_async_readers(HashAlgorithm::SHA256, readers)
         .await;
+
+    println!("gitoids_response {:?}", gitoids_response);
     
 
     match gitoids_response {
