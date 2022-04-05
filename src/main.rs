@@ -105,7 +105,6 @@ fn write_gitoid_file(gitoid: &GitOid, gitoid_directories: HashMap<String, String
 }
 
 async fn generate_async_gitbom(directory: &String) -> Result<(), Box<dyn std::error::Error>> {
-    // Create reader for every file within the directory
     let mut readers = Vec::new();
 
     for entry in WalkDir::new(directory) {
@@ -131,7 +130,6 @@ async fn generate_async_gitbom(directory: &String) -> Result<(), Box<dyn std::er
 
     println!("gitoids_response {:?}", gitoids_response);
     
-
     match gitoids_response {
         Ok(gitoids) => {
         let mut count = 0;
