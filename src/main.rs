@@ -99,7 +99,7 @@ fn create_gitbom_directory() -> std::io::Result<()> {
 fn create_gitoid_for_file(file: File) -> Result<GitOid, std::io::Error> {
     let file_length = file.metadata()?.len();
     let reader = BufReader::new(file);
-    GitOid::new_from_reader(HashAlgorithm::SHA1, reader, file_length as usize)
+    GitOid::new_from_reader(HashAlgorithm::SHA256, reader, file_length as usize)
 }
 
 fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, String>> {
