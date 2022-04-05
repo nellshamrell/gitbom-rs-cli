@@ -63,17 +63,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             // Generate GitOids for every file within directory
             // Then add to GitBom
             for entry in WalkDir::new(directory) {
-                let file = File::open(entry?.path())?;
-                let generated_gitoid = create_gitoid_for_file(file);
-                match generated_gitoid {
-                    Ok(gitoid) => {
-                        println!("Generated GitOid: {}", gitoid.hex_hash());
-                        let gitoid_directories = create_gitoid_directory(&gitoid)?;
-                        write_gitoid_file(&gitoid, gitoid_directories)?;
-                        count += 1;
-                    },
-                    Err(e) => println!("Error generating the GitBOM: {:?}", e),
+                let entry_clone = entry?.clone();
+
+                if entry_clone.file_type().is_dir() {
+                    continue;
+                } else {
+                    let file = File::open(entry_clone.path())?;
+                    let generated_gitoid = create_gitoid_for_file(file);
+                    match generated_gitoid {
+                        Ok(gitoid) => {
+                            println!("Generated GitOid: {}", gitoid.hex_hash());
+                            let gitoid_directories = create_gitoid_directory(&gitoid)?;
+                            write_gitoid_file(&gitoid, gitoid_directories)?;
+                            count += 1;
+                        },
+                        Err(e) => println!("Error generating the GitBOM: {:?}", e),
+                    }
                 }
+                
             }
 
             // TODO: tGenerate GitOid for the GitBom file itself?
