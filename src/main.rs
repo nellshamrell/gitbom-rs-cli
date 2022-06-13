@@ -6,6 +6,8 @@ use std::io::{BufReader, Write};
 use std::fs;
 use walkdir::WalkDir;
 
+const GITBOM_DIRECTORY: &str = ".bom/objects";
+
 /// A GitBom CLI written in Rust
 #[derive(Parser)]
 #[clap(name = "gitbom")]
@@ -91,7 +93,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn create_gitbom_directory() -> std::io::Result<()> {
-    let directory_path = String::from(".bom/objects");
+    let directory_path = String::from(GITBOM_DIRECTORY);
     fs::create_dir_all(directory_path)?;
     Ok(())
 }
@@ -108,7 +110,7 @@ fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, S
     // split off everything into a new string
     // except for the first 2 chars
     let rest_of_gitoid = gitoid_directory.split_off(2);
-    let directory_path = format!(".bom/objects/{}", gitoid_directory);
+    let directory_path = format!("{}/{}", GITBOM_DIRECTORY, gitoid_directory);
 
     fs::create_dir_all(directory_path)?;
 
@@ -121,7 +123,7 @@ fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, S
 }
 
 fn write_gitoid_file(gitoid: &GitOid, gitoid_directories: HashMap<String, String>) -> std::io::Result<()> {
-    let file_path = format!(".bom/objects/{}/{}", gitoid_directories["gitoid_shard"], gitoid_directories["rest_of_gitoid"]);
+    let file_path = format!("{}/{}/{}", GITBOM_DIRECTORY, gitoid_directories["gitoid_shard"], gitoid_directories["rest_of_gitoid"]);
 
     let mut gitoid_file = File::create(file_path)?;
     let gitoid_blob_string = format!("blob {}", gitoid.hex_hash());
