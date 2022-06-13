@@ -52,6 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("Generated GitOid: {}", gitoid.hex_hash());
                     let gitoid_directories = create_gitoid_directory(&gitoid)?;
                     write_gitoid_file(&gitoid, gitoid_directories)?;
+                    write_gitbom_file(&gitoid)?;
                 },
                 Err(e) => println!("Error generating the GitBOM: {:?}", e),
             }
@@ -80,6 +81,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             println!("Generated GitOid: {}", gitoid.hex_hash());
                             let gitoid_directories = create_gitoid_directory(&gitoid)?;
                             write_gitoid_file(&gitoid, gitoid_directories)?;
+                            write_gitbom_file(&gitoid)?;
                             count += 1;
                         },
                         Err(e) => println!("Error generating the GitBOM: {:?}", e),
@@ -137,17 +139,17 @@ fn write_gitoid_file(gitoid: &GitOid, gitoid_directories: HashMap<String, String
     let mut gitoid_file = File::create(file_path)?;
     let gitoid_blob_string = format!("blob_{}\n", gitoid.hex_hash());
     gitoid_file.write_all(gitoid_blob_string.as_bytes())?;
-    write_to_gitbom_file(gitoid_blob_string)?;
     Ok(())
 }
 
-fn write_to_gitbom_file(gitoid_string: String) -> std::io::Result<()> {
+fn write_gitbom_file(gitoid: &GitOid) -> std::io::Result<()> {
     let gitbom_file_path = format!("{}/gitbom_temp", GITBOM_DIRECTORY);
     let mut gitbom_file = fs::OpenOptions::new()
         .write(true)
         .append(true)
         .open(gitbom_file_path)?;
-    gitbom_file.write(gitoid_string.as_bytes())?;
+    let gitoid_blob_string = format!("blob_{}\n", gitoid.hex_hash());
+    gitbom_file.write(gitoid_blob_string.as_bytes())?;
     Ok(())
 }
 
