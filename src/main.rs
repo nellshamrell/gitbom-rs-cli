@@ -57,6 +57,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Err(e) => println!("Error generating the GitBOM: {:?}", e),
             }
 
+            hash_gitbom_file()?;
+
             Ok(())
         },
         Commands::ArtifactTree { directory } => {
@@ -90,7 +92,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 
             }
 
-            // TODO: tGenerate GitOid for the GitBom file itself?
+            hash_gitbom_file()?;
             println!("Generated GitBom for {} files", count);
             Ok(())
         }
@@ -134,12 +136,14 @@ fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, S
 }
 
 fn write_gitoid_file(gitoid: &GitOid, gitoid_directories: HashMap<String, String>) -> std::io::Result<()> {
-    let file_path = format!("{}/{}/{}/{}", GITBOM_DIRECTORY, OBJECTS_DIRECTORY, gitoid_directories["gitoid_shard"], gitoid_directories["rest_of_gitoid"]);
-
-    let mut gitoid_file = File::create(file_path)?;
+    let mut gitoid_file = File::create(gitoid_file_path(gitoid_directories))?;
     let gitoid_blob_string = format!("blob_{}\n", gitoid.hex_hash());
     gitoid_file.write_all(gitoid_blob_string.as_bytes())?;
     Ok(())
+}
+
+fn gitoid_file_path(gitoid_directories: HashMap<String, String>) -> String {
+    return format!("{}/{}/{}/{}", GITBOM_DIRECTORY, OBJECTS_DIRECTORY, gitoid_directories["gitoid_shard"], gitoid_directories["rest_of_gitoid"]);
 }
 
 fn write_gitbom_file(gitoid: &GitOid) -> std::io::Result<()> {
@@ -153,3 +157,18 @@ fn write_gitbom_file(gitoid: &GitOid) -> std::io::Result<()> {
     Ok(())
 }
 
+fn hash_gitbom_file() -> std::io::Result<()> {
+    let gitbom_file_path = format!("{}/gitbom_temp", GITBOM_DIRECTORY);
+    let gitbom_file = File::open(&gitbom_file_path)?;
+    let gitoid = create_gitoid_for_file(gitbom_file)?;
+
+    println!("GitOid for GitBOM file: {}", gitoid.hex_hash());
+
+    let gitoid_directories = create_gitoid_directory(&gitoid)?;
+
+    let new_file_path = gitoid_file_path(gitoid_directories);
+    fs::copy(&gitbom_file_path, new_file_path)?;
+
+    fs::remove_file(gitbom_file_path)?;
+    Ok(())
+}
