@@ -126,7 +126,7 @@ fn write_gitoid_file(gitoid: &GitOid, gitoid_directories: HashMap<String, String
     let file_path = format!("{}/{}/{}", GITBOM_DIRECTORY, gitoid_directories["gitoid_shard"], gitoid_directories["rest_of_gitoid"]);
 
     let mut gitoid_file = File::create(file_path)?;
-    let gitoid_blob_string = format!("blob {}", gitoid.hex_hash());
+    let gitoid_blob_string = format!("blob {}\n", gitoid.hex_hash());
     gitoid_file.write_all(gitoid_blob_string.as_bytes())?;
     Ok(())
 }
