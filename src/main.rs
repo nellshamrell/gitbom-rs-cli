@@ -137,7 +137,7 @@ fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, S
 
 fn write_gitoid_file(gitoid: &GitOid, gitoid_directories: HashMap<String, String>) -> std::io::Result<()> {
     let mut gitoid_file = File::create(gitoid_file_path(gitoid_directories))?;
-    let gitoid_blob_string = format!("blob_{}\n", gitoid.hex_hash());
+    let gitoid_blob_string = format!("blob {}\n", gitoid.hex_hash());
     gitoid_file.write_all(gitoid_blob_string.as_bytes())?;
     Ok(())
 }
@@ -152,7 +152,7 @@ fn write_gitbom_file(gitoid: &GitOid) -> std::io::Result<()> {
         .write(true)
         .append(true)
         .open(gitbom_file_path)?;
-    let gitoid_blob_string = format!("blob_{}\n", gitoid.hex_hash());
+    let gitoid_blob_string = format!("blob {}\n", gitoid.hex_hash());
     gitbom_file.write(gitoid_blob_string.as_bytes())?;
     Ok(())
 }
