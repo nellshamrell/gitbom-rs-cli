@@ -153,7 +153,7 @@ fn write_gitbom_file(gitoid: &GitOid) -> std::io::Result<()> {
         .append(true)
         .open(gitbom_file_path)?;
     let gitoid_blob_string = format!("blob {}\n", gitoid.hex_hash());
-    gitbom_file.write(gitoid_blob_string.as_bytes())?;
+    gitbom_file.write_all(gitoid_blob_string.as_bytes())?;
     Ok(())
 }
 
