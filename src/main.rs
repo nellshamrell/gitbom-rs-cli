@@ -1,8 +1,7 @@
 use gitoid::{HashAlgorithm, GitOid};
 use clap::{Parser, Subcommand};
 use std::collections::HashMap;
-//use std::fs::File;
-use std::io::{BufReader, Write};
+use std::io::Write;
 use std::fs;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
