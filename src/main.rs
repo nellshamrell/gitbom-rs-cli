@@ -1,8 +1,7 @@
 use gitoid::{HashAlgorithm, GitOid};
 use clap::{Parser, Subcommand};
 use std::collections::HashMap;
-use std::io::Write;
-use std::fs;
+use tokio::fs;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 use walkdir::WalkDir;
@@ -43,7 +42,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match &args.command {
         Commands::Bom { file } => {
             println!("Generating GitBOM for {}", file);
-            create_gitbom_directory()?;
+            create_gitbom_directory().await?;
             create_gitbom_file().await?;
 
             let file = tokio::fs::File::open(file).await?;
@@ -52,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("Generated GitOid: {}", generated_gitoid.hex_hash());
             let gitoid_directories = create_gitoid_directory(&generated_gitoid).await?;
             write_gitoid_file(&generated_gitoid, gitoid_directories).await?;
-            write_gitbom_file(&generated_gitoid)?;
+            write_gitbom_file(&generated_gitoid).await?;
 
             hash_gitbom_file().await?;
 
@@ -60,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
         Commands::ArtifactTree { directory } => {
             println!("Generating GitBOM for {}", directory);
-            create_gitbom_directory()?;
+            create_gitbom_directory().await?;
             create_gitbom_file().await?;
             
             let mut count = 0;
@@ -78,7 +77,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("Generated GitOid: {}", generated_gitoid.hex_hash());
                     let gitoid_directories = create_gitoid_directory(&generated_gitoid).await?;
                     write_gitoid_file(&generated_gitoid, gitoid_directories).await?;
-                    write_gitbom_file(&generated_gitoid)?;
+                    write_gitbom_file(&generated_gitoid).await?;
                     count += 1;
                 }
                 
@@ -91,9 +90,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 }
 
-fn create_gitbom_directory() -> std::io::Result<()> {
+async fn create_gitbom_directory() -> std::io::Result<()> {
     let directory_path = format!("{}/{}", GITBOM_DIRECTORY, OBJECTS_DIRECTORY);
-    fs::create_dir_all(directory_path)?;
+    fs::create_dir_all(directory_path).await?;
     Ok(())
 }
 
@@ -117,7 +116,7 @@ async fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<Str
     let rest_of_gitoid = gitoid_directory.split_off(2);
     let directory_path = format!("{}/{}/{}", GITBOM_DIRECTORY, OBJECTS_DIRECTORY, gitoid_directory);
 
-    fs::create_dir_all(directory_path)?;
+    fs::create_dir_all(directory_path).await?;
 
     let directory_strings = HashMap::from([
       (String::from("gitoid_shard"), gitoid_directory),
@@ -138,14 +137,14 @@ fn gitoid_file_path(gitoid_directories: HashMap<String, String>) -> String {
     return format!("{}/{}/{}/{}", GITBOM_DIRECTORY, OBJECTS_DIRECTORY, gitoid_directories["gitoid_shard"], gitoid_directories["rest_of_gitoid"]);
 }
 
-fn write_gitbom_file(gitoid: &GitOid) -> std::io::Result<()> {
+async fn write_gitbom_file(gitoid: &GitOid) -> std::io::Result<()> {
     let gitbom_file_path = format!("{}/gitbom_temp", GITBOM_DIRECTORY);
     let mut gitbom_file = fs::OpenOptions::new()
         .write(true)
         .append(true)
-        .open(gitbom_file_path)?;
+        .open(gitbom_file_path).await?;
     let gitoid_blob_string = format!("blob {}\n", gitoid.hex_hash());
-    gitbom_file.write_all(gitoid_blob_string.as_bytes())?;
+    gitbom_file.write_all(gitoid_blob_string.as_bytes()).await?;
     Ok(())
 }
 
@@ -159,8 +158,8 @@ async fn hash_gitbom_file() -> std::io::Result<()> {
     let gitoid_directories = create_gitoid_directory(&gitoid).await?;
 
     let new_file_path = gitoid_file_path(gitoid_directories);
-    fs::copy(&gitbom_file_path, new_file_path)?;
+    fs::copy(&gitbom_file_path, new_file_path).await?;
 
-    fs::remove_file(gitbom_file_path)?;
+    fs::remove_file(gitbom_file_path).await?;
     Ok(())
 }
