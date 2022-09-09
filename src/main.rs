@@ -1,4 +1,4 @@
-use gitbom::{HashAlgorithm, GitOid};
+use gitoid::{HashAlgorithm, GitOid};
 use clap::{Parser, Subcommand};
 use std::collections::HashMap;
 use std::fs::File;
