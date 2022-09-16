@@ -1,4 +1,4 @@
-use gitbom::{HashAlgorithm, GitOid};
+use gitoid::{HashAlgorithm, GitOid, ObjectType::Blob};
 use clap::{Parser, Subcommand};
 use std::collections::HashMap;
 use std::fs::File;
@@ -49,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             match generated_gitoid {
                 Ok(gitoid) => {
-                    println!("Generated GitOid: {}", gitoid.hex_hash());
+                    println!("Generated GitOid: {}", gitoid.hash());
                     let gitoid_directories = create_gitoid_directory(&gitoid)?;
                     write_gitoid_file(&gitoid, gitoid_directories)?;
                     write_gitbom_file(&gitoid)?;
@@ -80,7 +80,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let generated_gitoid = create_gitoid_for_file(file);
                     match generated_gitoid {
                         Ok(gitoid) => {
-                            println!("Generated GitOid: {}", gitoid.hex_hash());
+                            println!("Generated GitOid: {}", gitoid.hash());
                             let gitoid_directories = create_gitoid_directory(&gitoid)?;
                             write_gitoid_file(&gitoid, gitoid_directories)?;
                             write_gitbom_file(&gitoid)?;
@@ -111,14 +111,14 @@ fn create_gitbom_file() -> std::io::Result<()> {
     Ok(())
 }
 
-fn create_gitoid_for_file(file: File) -> Result<GitOid, std::io::Error> {
+fn create_gitoid_for_file(file: File) -> Result<GitOid, gitoid::Error> {
     let file_length = file.metadata()?.len();
     let reader = BufReader::new(file);
-    GitOid::new_from_reader(HashAlgorithm::SHA256, reader, file_length as usize)
+    GitOid::new_from_reader(HashAlgorithm::Sha256, Blob, reader, file_length as usize)
 }
 
 fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, String>> {
-    let mut gitoid_directory = gitoid.hex_hash();
+    let mut gitoid_directory = gitoid.hash();
 
     // split off everything into a new string
     // except for the first 2 chars
@@ -137,7 +137,7 @@ fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, S
 
 fn write_gitoid_file(gitoid: &GitOid, gitoid_directories: HashMap<String, String>) -> std::io::Result<()> {
     let mut gitoid_file = File::create(gitoid_file_path(gitoid_directories))?;
-    let gitoid_blob_string = format!("blob {}\n", gitoid.hex_hash());
+    let gitoid_blob_string = format!("blob {}\n", gitoid.hash());
     gitoid_file.write_all(gitoid_blob_string.as_bytes())?;
     Ok(())
 }
@@ -152,17 +152,20 @@ fn write_gitbom_file(gitoid: &GitOid) -> std::io::Result<()> {
         .write(true)
         .append(true)
         .open(gitbom_file_path)?;
-    let gitoid_blob_string = format!("blob {}\n", gitoid.hex_hash());
+    let gitoid_blob_string = format!("blob {}\n", gitoid.hash());
     gitbom_file.write_all(gitoid_blob_string.as_bytes())?;
     Ok(())
 }
 
-fn hash_gitbom_file() -> std::io::Result<()> {
+fn hash_gitbom_file() -> Result<(), gitoid::Error> {
     let gitbom_file_path = format!("{}/gitbom_temp", GITBOM_DIRECTORY);
     let gitbom_file = File::open(&gitbom_file_path)?;
-    let gitoid = create_gitoid_for_file(gitbom_file)?;
+    let gitoid = match create_gitoid_for_file(gitbom_file) {
+        Ok(gitoid) => gitoid,
+        Err(e) => return Err(e)
+    };
 
-    println!("GitOid for GitBOM file: {}", gitoid.hex_hash());
+    println!("GitOid for GitBOM file: {}", gitoid.hash());
 
     let gitoid_directories = create_gitoid_directory(&gitoid)?;
 
