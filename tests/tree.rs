@@ -3,7 +3,6 @@
 use assert_cmd::Command;
 use predicates::prelude::*;
 extern crate test;
-use test::Bencher;
 
 #[test]
 fn artifact_tree_output_file_does_not_exist() -> Result<(), Box<dyn std::error::Error>> {
