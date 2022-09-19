@@ -1,7 +1,6 @@
 #![feature(test)]
 
 use assert_cmd::Command;
-use predicates::prelude::*;
 extern crate test;
 use test::Bencher;
 
@@ -11,7 +10,8 @@ fn bench_artifact_tree_output_test(b: &mut Bencher) -> Result<(), Box<dyn std::e
     cmd.arg("artifact-tree").arg("tests/fixtures/large_directory");
 
     b.iter(||
-        cmd.assert().success()
+        // Executes the command
+        cmd.unwrap()
     );
 
     Ok(())
