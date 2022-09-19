@@ -24,15 +24,3 @@ fn artifact_tree_output_test() -> Result<(), Box<dyn std::error::Error>> {
         .stdout(predicate::str::contains("Generated GitBom for 2 files"));
     Ok(())
 }
-
-#[bench]
-fn bench_artifact_tree_output_test(b: &mut Bencher) -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = Command::cargo_bin("gitbom-cli")?;
-    cmd.arg("artifact-tree").arg("tests/fixtures/large_directory");
-
-    b.iter(||
-        cmd.assert().success()
-    );
-
-    Ok(())
-}
