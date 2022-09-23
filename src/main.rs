@@ -38,6 +38,7 @@ enum Commands {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Cli::parse();
+    console_subscriber::init();
 
     match &args.command {
         Commands::Bom { file } => {
