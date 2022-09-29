@@ -68,8 +68,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             
             let mut count = 0;
 
+            let mut gitoids_collected: Vec<GitOid> = Vec::new();
+
             // Generate GitOids for every file within directory
-            // Then add to GitBom
             for entry in WalkDir::new(directory) {
                 let entry_clone = entry?.clone();
 
@@ -83,7 +84,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             println!("Generated GitOid: {}", gitoid.hash());
                             let gitoid_directories = create_gitoid_directory(&gitoid)?;
                             write_gitoid_file(&gitoid, gitoid_directories)?;
-                            write_gitbom_file(&gitoid)?;
+                            gitoids_collected.push(gitoid);
+                            //write_gitbom_file(&gitoid)?;
                             count += 1;
                         },
                         Err(e) => println!("Error generating the GitBOM: {:?}", e),
@@ -91,6 +93,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 
             }
+
+           for gitoid in gitoids_collected {
+               write_gitbom_file(&gitoid)?;
+           } 
 
             hash_gitbom_file()?;
             println!("Generated GitBom for {} files", count);
