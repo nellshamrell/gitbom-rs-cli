@@ -64,8 +64,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             
             let mut count = 0;
 
+            let mut collected_gitoids: Vec<GitOid> = Vec::new();
+
             // Generate GitOids for every file within directory
-            // Then add to GitBom
             for entry in WalkDir::new(directory) {
                 let entry_clone = entry?.clone();
 
@@ -77,10 +78,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("Generated GitOid: {}", generated_gitoid.hash());
                     let gitoid_directories = create_gitoid_directory(&generated_gitoid).await?;
                     write_gitoid_file(&generated_gitoid, gitoid_directories).await?;
-                    write_gitbom_file(&generated_gitoid).await?;
+                    collected_gitoids.push(generated_gitoid);
                     count += 1;
                 }
                 
+            }
+
+            for gitoid in collected_gitoids {
+                write_gitbom_file(&gitoid).await?;
             }
 
             hash_gitbom_file().await?;
