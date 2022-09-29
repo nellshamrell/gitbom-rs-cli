@@ -118,7 +118,7 @@ fn create_gitoid_for_file(file: File) -> Result<GitOid, gitoid::Error> {
 }
 
 fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, String>> {
-    let mut gitoid_directory = gitoid.hash();
+    let mut gitoid_directory = gitoid.hash().as_hex();
 
     // split off everything into a new string
     // except for the first 2 chars
