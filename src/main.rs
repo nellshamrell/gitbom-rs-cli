@@ -2,9 +2,9 @@ use gitbom::GitBom;
 use gitoid::{HashAlgorithm, GitOid, ObjectType::Blob};
 use clap::{Parser, Subcommand};
 use std::collections::HashMap;
-use std::fs::File;
 use std::io::{BufReader, Write};
-use std::fs;
+use tokio::fs::File;
+use tokio::io::AsyncWriteExt;
 use walkdir::WalkDir;
 
 const GITBOM_DIRECTORY: &str = ".bom";
@@ -36,7 +36,8 @@ enum Commands {
     }
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Cli::parse();
 
     match &args.command {
@@ -45,18 +46,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             create_gitbom_directory()?;
             create_gitbom_file()?;
 
-            let file = File::open(file)?;
-            let generated_gitoid = create_gitoid_for_file(file);
+            let file = tokio::fs::File::open(file).await?;
+            let generated_gitoid = create_gitoid_for_file(file).await?;
 
-            match generated_gitoid {
-                Ok(gitoid) => {
-                    println!("Generated GitOid: {}", gitoid.hash());
-                    let gitoid_directories = create_gitoid_directory(&gitoid)?;
-                    write_gitoid_file(&gitoid, gitoid_directories)?;
-                    write_gitbom_file(&gitoid)?;
-                },
-                Err(e) => println!("Error generating the GitBOM: {:?}", e),
-            }
+            println!("Generated GitOid: {}", generated_gitoid.hash());
+            let gitoid_directories = async_create_gitoid_directory(&generated_gitoid).await?;
+            write_gitoid_file(&generated_gitoid, gitoid_directories).await?;
+            write_gitbom_file(&generated_gitoid)?;
 
             hash_gitbom_file()?;
 
@@ -78,18 +74,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 if entry_clone.file_type().is_dir() {
                     continue;
                 } else {
-                    let file = File::open(entry_clone.path())?;
-                    let generated_gitoid = create_gitoid_for_file(file);
-                    match generated_gitoid {
-                        Ok(gitoid) => {
-                            println!("Generated GitOid: {}", gitoid.hash());
-                            let gitoid_directories = create_gitoid_directory(&gitoid)?;
-                            write_gitoid_file(&gitoid, gitoid_directories)?;
-                            gitbom.add(gitoid);
-                            count += 1;
-                        },
-                        Err(e) => println!("Error generating the GitBOM: {:?}", e),
-                    }
+                    let file = tokio::fs::File::open(entry_clone.path()).await?;
+                    let generated_gitoid = create_gitoid_for_file(file).await?;
+                    println!("Generated GitOid: {}", generated_gitoid.hash());
+                    let gitoid_directories = async_create_gitoid_directory(&generated_gitoid).await?;
+                    write_gitoid_file(&generated_gitoid, gitoid_directories).await?;
+                    gitbom.add(generated_gitoid);
+                    count += 1;
                 }
                 
             }
@@ -107,23 +98,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn create_gitbom_directory() -> std::io::Result<()> {
     let directory_path = format!("{}/{}", GITBOM_DIRECTORY, OBJECTS_DIRECTORY);
-    fs::create_dir_all(directory_path)?;
+    std::fs::create_dir_all(directory_path)?;
     Ok(())
 }
 
 fn create_gitbom_file() -> std::io::Result<()> {
     let file_path = format!("{}/gitbom_temp", GITBOM_DIRECTORY);
-    File::create(file_path)?;
+    std::fs::File::create(file_path)?;
     Ok(())
 }
 
-fn create_gitoid_for_file(file: File) -> Result<GitOid, gitoid::Error> {
-    let file_length = file.metadata()?.len();
-    let reader = BufReader::new(file);
-    GitOid::new_from_reader(HashAlgorithm::Sha256, Blob, reader, file_length as usize)
+async fn create_gitoid_for_file(file: File) -> Result<GitOid, gitoid::Error> {
+    let file_length = file.metadata().await?.len();
+    //let reader = BufReader::new(file);
+    let res = GitOid::new_from_async_reader(HashAlgorithm::Sha256, Blob, file, file_length as usize).await?;
+    Ok(res)
 }
 
-fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, String>> {
+async fn async_create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, String>> {
     let mut gitoid_directory = gitoid.hash().as_hex();
 
     // split off everything into a new string
@@ -131,7 +123,7 @@ fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, S
     let rest_of_gitoid = gitoid_directory.split_off(2);
     let directory_path = format!("{}/{}/{}", GITBOM_DIRECTORY, OBJECTS_DIRECTORY, gitoid_directory);
 
-    fs::create_dir_all(directory_path)?;
+    tokio::fs::create_dir_all(directory_path).await?;
 
     let directory_strings = HashMap::from([
       (String::from("gitoid_shard"), gitoid_directory),
@@ -141,10 +133,24 @@ fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, S
     Ok(directory_strings)
 }
 
-fn write_gitoid_file(gitoid: &GitOid, gitoid_directories: HashMap<String, String>) -> std::io::Result<()> {
-    let mut gitoid_file = File::create(gitoid_file_path(gitoid_directories))?;
+fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, String>> {
+    let mut gitoid_directory = gitoid.hash().as_hex();
+    // split off everything into a new string
+    // except for the first 2 chars
+    let rest_of_gitoid = gitoid_directory.split_off(2);
+    let directory_path = format!("{}/{}/{}", GITBOM_DIRECTORY, OBJECTS_DIRECTORY, gitoid_directory);
+    std::fs::create_dir_all(directory_path)?;
+    let directory_strings = HashMap::from([
+      (String::from("gitoid_shard"), gitoid_directory),
+      (String::from("rest_of_gitoid"), rest_of_gitoid)
+    ]);
+    Ok(directory_strings)
+}
+
+async fn write_gitoid_file(gitoid: &GitOid, gitoid_directories: HashMap<String, String>) -> std::io::Result<()> {
+    let mut gitoid_file = tokio::fs::File::create(gitoid_file_path(gitoid_directories)).await?;
     let gitoid_blob_string = format!("blob {}\n", gitoid.hash());
-    gitoid_file.write_all(gitoid_blob_string.as_bytes())?;
+    gitoid_file.write_all(gitoid_blob_string.as_bytes()).await?;
     Ok(())
 }
 
@@ -154,7 +160,7 @@ fn gitoid_file_path(gitoid_directories: HashMap<String, String>) -> String {
 
 fn write_gitbom_file(gitoid: &GitOid) -> std::io::Result<()> {
     let gitbom_file_path = format!("{}/gitbom_temp", GITBOM_DIRECTORY);
-    let mut gitbom_file = fs::OpenOptions::new()
+    let mut gitbom_file = std::fs::OpenOptions::new()
         .write(true)
         .append(true)
         .open(gitbom_file_path)?;
@@ -164,20 +170,23 @@ fn write_gitbom_file(gitoid: &GitOid) -> std::io::Result<()> {
 }
 
 fn hash_gitbom_file() -> Result<(), gitoid::Error> {
+    // Use sync methods for the moment
+
     let gitbom_file_path = format!("{}/gitbom_temp", GITBOM_DIRECTORY);
-    let gitbom_file = File::open(&gitbom_file_path)?;
-    let gitoid = match create_gitoid_for_file(gitbom_file) {
-        Ok(gitoid) => gitoid,
-        Err(e) => return Err(e)
-    };
+    let gitbom_file = std::fs::File::open(&gitbom_file_path)?;
 
-    println!("GitOid for GitBOM file: {}", gitoid.hash());
+    let file_length = gitbom_file.metadata()?.len();
+    let reader = BufReader::new(gitbom_file);
 
-    let gitoid_directories = create_gitoid_directory(&gitoid)?;
+    let generated_gitoid = GitOid::new_from_reader(HashAlgorithm::Sha256, Blob, reader, file_length as usize)?;
+
+    println!("GitOid for GitBOM file: {}", generated_gitoid.hash());
+
+    let gitoid_directories = create_gitoid_directory(&generated_gitoid)?;
 
     let new_file_path = gitoid_file_path(gitoid_directories);
-    fs::copy(&gitbom_file_path, new_file_path)?;
+    std::fs::copy(&gitbom_file_path, new_file_path)?;
 
-    fs::remove_file(gitbom_file_path)?;
+    std::fs::remove_file(gitbom_file_path)?;
     Ok(())
 }
