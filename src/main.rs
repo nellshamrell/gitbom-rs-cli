@@ -85,7 +85,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             let gitoid_directories = create_gitoid_directory(&gitoid)?;
                             write_gitoid_file(&gitoid, gitoid_directories)?;
                             gitoids_collected.push(gitoid);
-                            //write_gitbom_file(&gitoid)?;
                             count += 1;
                         },
                         Err(e) => println!("Error generating the GitBOM: {:?}", e),
