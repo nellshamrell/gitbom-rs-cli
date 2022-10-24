@@ -13,4 +13,5 @@ walkdir = "2.3.2"
 
 [dev-dependencies]
 assert_cmd = "2.0.4"
+tempfile = "3.3.0"
 predicates = "2.1"

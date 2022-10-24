@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufReader, Write};
 use std::fs;
+use std::path::Path;
 use walkdir::WalkDir;
 
 const GITBOM_DIRECTORY: &str = ".bom";
@@ -107,7 +108,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn create_gitbom_directory() -> std::io::Result<()> {
     let directory_path = format!("{}/{}", GITBOM_DIRECTORY, OBJECTS_DIRECTORY);
-    fs::create_dir_all(directory_path)?;
+    //Check if .bom directory already exists
+    let dir_exists: bool = Path::new(&directory_path).is_dir();
+    if dir_exists {
+        println!("GitBOM directory already exists");
+    } else {
+        fs::create_dir_all(directory_path)?;
+        println!("Created GitBOM directory");
+    }
     Ok(())
 }
 
