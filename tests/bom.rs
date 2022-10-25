@@ -45,7 +45,7 @@ fn bom_file_does_not_exist() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn bom_output_test() -> Result<(), Box<dyn std::error::Error>> {
+fn generates_bom_directory() -> Result<(), Box<dyn std::error::Error>> {
     fs::create_dir_all("temp_test_dir_2")?;
 
     let mut cmd = Command::cargo_bin("gitbom-cli")?;
@@ -53,58 +53,43 @@ fn bom_output_test() -> Result<(), Box<dyn std::error::Error>> {
     cmd.current_dir("temp_test_dir_2");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("Generated GitOid: 5b2f2d4e79e6387ca9dedad500ebf70e9fb3097773252cc5b9a6d5a35a987028"));
-
+        .stdout(predicate::str::contains("Created GitBOM directory"));
+    let bom_dir_exists = Path::new("temp_test_dir_2/.bom").is_dir();
+    assert_eq!(bom_dir_exists, true);
     fs::remove_dir_all("temp_test_dir_2")?;
     Ok(())
 }
 
 #[test]
-fn generates_bom_directory() -> Result<(), Box<dyn std::error::Error>> {
-    fs::create_dir_all("temp_test_dir_3")?;
+fn when_bom_directory_already_exists() -> Result<(), Box<dyn std::error::Error>> {
+    fs::create_dir_all("temp_test_dir_3/.bom/objects")?;
+    let bom_dir_exists = Path::new("temp_test_dir_3/.bom").is_dir();
+    assert_eq!(bom_dir_exists, true);
 
     let mut cmd = Command::cargo_bin("gitbom-cli")?;
     cmd.arg("bom").arg("../tests/fixtures/hello.txt");
     cmd.current_dir("temp_test_dir_3");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("Created GitBOM directory"));
-    let bom_dir_exists = Path::new("temp_test_dir_3/.bom").is_dir();
-    assert_eq!(bom_dir_exists, true);
+        .stdout(predicate::str::contains("GitBOM directory already exists"));
+
     fs::remove_dir_all("temp_test_dir_3")?;
     Ok(())
 }
 
 #[test]
-fn when_bom_directory_already_exists() -> Result<(), Box<dyn std::error::Error>> {
-    fs::create_dir_all("temp_test_dir_4/.bom/objects")?;
-    let bom_dir_exists = Path::new("temp_test_dir_4/.bom").is_dir();
-    assert_eq!(bom_dir_exists, true);
+fn generating_bom_file() -> Result<(), Box<dyn std::error::Error>> {
+    fs::create_dir_all("temp_test_dir_4/.bom")?;
 
     let mut cmd = Command::cargo_bin("gitbom-cli")?;
     cmd.arg("bom").arg("../tests/fixtures/hello.txt");
     cmd.current_dir("temp_test_dir_4");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("GitBOM directory already exists"));
-
-    fs::remove_dir_all("temp_test_dir_4")?;
-    Ok(())
-}
-
-#[test]
-fn generating_bom_file() -> Result<(), Box<dyn std::error::Error>> {
-    fs::create_dir_all("temp_test_dir_5/.bom")?;
-
-    let mut cmd = Command::cargo_bin("gitbom-cli")?;
-    cmd.arg("bom").arg("../tests/fixtures/hello.txt");
-    cmd.current_dir("temp_test_dir_5");
-    cmd.assert()
-        .success()
         .stdout(predicate::str::contains("Generated GitOid: 5b2f2d4e79e6387ca9dedad500ebf70e9fb3097773252cc5b9a6d5a35a987028"));
 
-    let gitoid_dir_exists = Path::new("temp_test_dir_5/.bom/objects/5b/2f2d4e79e6387ca9dedad500ebf70e9fb3097773252cc5b9a6d5a35a987028").exists();
+    let gitoid_dir_exists = Path::new("temp_test_dir_4/.bom/objects/5b/2f2d4e79e6387ca9dedad500ebf70e9fb3097773252cc5b9a6d5a35a987028").exists();
     assert_eq!(gitoid_dir_exists, true);
-    fs::remove_dir_all("temp_test_dir_5")?;
+    fs::remove_dir_all("temp_test_dir_4")?;
     Ok(())
 }
