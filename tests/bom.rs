@@ -1,5 +1,6 @@
 use assert_cmd::Command;
 use predicates::prelude::*;
+use std::path::Path;
 use std::fs;
 
 #[test]
@@ -68,7 +69,8 @@ fn generates_bom_directory() -> Result<(), Box<dyn std::error::Error>> {
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("Created GitBOM directory"));
-
+    let bom_dir_exists = Path::new("temp_test_dir_3/.bom").is_dir();
+    assert_eq!(bom_dir_exists, true);
     fs::remove_dir_all("temp_test_dir_3")?;
     Ok(())
 }
