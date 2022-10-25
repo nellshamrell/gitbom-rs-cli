@@ -108,7 +108,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn create_gitbom_directory() -> std::io::Result<()> {
     let directory_path = format!("{}/{}", GITBOM_DIRECTORY, OBJECTS_DIRECTORY);
-    //Check if .bom directory already exists
+    //Check if .bom/objects directory already exists
     let dir_exists: bool = Path::new(&directory_path).is_dir();
     if dir_exists {
         println!("GitBOM directory already exists");
