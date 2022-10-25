@@ -78,7 +78,7 @@ fn when_bom_directory_already_exists() -> Result<(), Box<dyn std::error::Error>>
 }
 
 #[test]
-fn generating_bom_file() -> Result<(), Box<dyn std::error::Error>> {
+fn generating_gitoid_file() -> Result<(), Box<dyn std::error::Error>> {
     fs::create_dir_all("temp_test_dir_4/.bom")?;
 
     let mut cmd = Command::cargo_bin("gitbom-cli")?;
@@ -91,5 +91,23 @@ fn generating_bom_file() -> Result<(), Box<dyn std::error::Error>> {
     let gitoid_dir_exists = Path::new("temp_test_dir_4/.bom/objects/5b/2f2d4e79e6387ca9dedad500ebf70e9fb3097773252cc5b9a6d5a35a987028").exists();
     assert_eq!(gitoid_dir_exists, true);
     fs::remove_dir_all("temp_test_dir_4")?;
+    Ok(())
+}
+
+#[test]
+fn generating_gitoid_for_bom_file() -> Result<(), Box<dyn std::error::Error>> {
+    fs::create_dir_all("temp_test_dir_5/.bom")?;
+
+    let mut cmd = Command::cargo_bin("gitbom-cli")?;
+    cmd.arg("bom").arg("../tests/fixtures/hello.txt");
+    cmd.current_dir("temp_test_dir_5");
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("GitOid for GitBOM file: 88f0433eb2740a45eb1b338f879bef1263b35643a2e90b1ee021378c78ef9d8f"));
+
+    let gitoid_dir_exists = Path::new("temp_test_dir_5/.bom/objects/88/f0433eb2740a45eb1b338f879bef1263b35643a2e90b1ee021378c78ef9d8f").exists();
+    assert_eq!(gitoid_dir_exists, true);
+
+    fs::remove_dir_all("temp_test_dir_5")?;
     Ok(())
 }
