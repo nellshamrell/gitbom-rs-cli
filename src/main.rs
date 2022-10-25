@@ -4,6 +4,7 @@ use clap::{Parser, Subcommand};
 use std::collections::HashMap;
 use std::io::{BufReader, Write};
 use std::fs;
+use tokio_uring::fs::File;
 use walkdir::WalkDir;
 
 const GITBOM_DIRECTORY: &str = ".bom";
@@ -44,18 +45,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             create_gitbom_directory()?;
             create_gitbom_file()?;
 
-            let file = std::fs::File::open(file)?;
-            let generated_gitoid = create_gitoid_for_file(file);
+            tokio_uring::start(async {
+                let file = File::open(file).await?;
+                let generated_gitoid = create_gitoid_for_file(file);
 
-            match generated_gitoid {
-                Ok(gitoid) => {
-                    println!("Generated GitOid: {}", gitoid.hash());
-                    let gitoid_directories = create_gitoid_directory(&gitoid)?;
-                    write_gitoid_file(&gitoid, gitoid_directories)?;
-                    write_gitbom_file(&gitoid)?;
-                },
-                Err(e) => println!("Error generating the GitBOM: {:?}", e),
-            }
+                match generated_gitoid {
+                    Ok(gitoid) => {
+                        println!("Generated GitOid: {}", gitoid.hash());
+                        let gitoid_directories = create_gitoid_directory(&gitoid)?;
+                        write_gitoid_file(&gitoid, gitoid_directories)?;
+                        write_gitbom_file(&gitoid)?;
+                    },
+                    Err(e) => println!("Error generating the GitBOM: {:?}", e),
+                }
+
+                Ok(())
+
+            });
 
             hash_gitbom_file()?;
 
@@ -116,10 +122,13 @@ fn create_gitbom_file() -> std::io::Result<()> {
     Ok(())
 }
 
-fn create_gitoid_for_file(file: std::fs::File) -> Result<GitOid, gitoid::Error> {
-    let file_length = file.metadata()?.len();
-    let reader = BufReader::new(file);
-    GitOid::new_from_reader(HashAlgorithm::Sha256, Blob, reader, file_length as usize)
+async fn create_gitoid_for_file(file: tokio_uring::fs::File) -> Result<GitOid, gitoid::Error> {
+    let file_length = 11;
+    let buf = vec![0; 4096];
+    let (res, buf) = file.read_at(buf, 0).await;
+    GitOid::new_from_reader(HashAlgorithm::Sha256, Blob, res, file_length as usize);
+//    let res = GitOid::new_from_async_reader(HashAlgorithm::Sha256, Blob, file, file_length as usize).await?;
+    Ok(res)
 }
 
 fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, String>> {
