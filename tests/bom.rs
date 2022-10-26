@@ -79,7 +79,7 @@ fn when_bom_directory_already_exists() -> Result<(), Box<dyn std::error::Error>>
 
 #[test]
 fn generating_gitoid_file() -> Result<(), Box<dyn std::error::Error>> {
-    fs::create_dir_all("temp_test_dir_4/.bom")?;
+    fs::create_dir_all("temp_test_dir_4")?;
 
     let mut cmd = Command::cargo_bin("gitbom-cli")?;
     cmd.arg("bom").arg("../tests/fixtures/hello.txt");
@@ -96,7 +96,7 @@ fn generating_gitoid_file() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn generating_gitoid_for_bom_file() -> Result<(), Box<dyn std::error::Error>> {
-    fs::create_dir_all("temp_test_dir_5/.bom")?;
+    fs::create_dir_all("temp_test_dir_5")?;
 
     let mut cmd = Command::cargo_bin("gitbom-cli")?;
     cmd.arg("bom").arg("../tests/fixtures/hello.txt");
