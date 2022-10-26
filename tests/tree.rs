@@ -85,7 +85,7 @@ fn generating_gitoid_files() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn generating_gitoid_for_bom_file() -> Result<(), Box<dyn std::error::Error>> {
+fn generating_gitoid_for_sha1_bom_file() -> Result<(), Box<dyn std::error::Error>> {
     fs::create_dir_all("temp_test_dir_5")?;
 
     let mut cmd = Command::cargo_bin("gitbom-cli")?;
@@ -93,9 +93,9 @@ fn generating_gitoid_for_bom_file() -> Result<(), Box<dyn std::error::Error>> {
     cmd.current_dir("temp_test_dir_5");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("GitOid for GitBOM file: 473a0f4c3be8a93681a267e3b1e9a7dcda1185436fe141f7749120a303721813"));
+        .stdout(predicate::str::contains("GitOid for GitBOM file: 056c617ab64860f6933e49cdf3abb35f742f17df7146648eb3b793612178ee87"));
 
-    let gitoid_dir_exists = Path::new("temp_test_dir_5/.bom/objects/47/3a0f4c3be8a93681a267e3b1e9a7dcda1185436fe141f7749120a303721813").exists();
+    let gitoid_dir_exists = Path::new("temp_test_dir_5/.bom/objects/05/6c617ab64860f6933e49cdf3abb35f742f17df7146648eb3b793612178ee87").exists();
     assert_eq!(gitoid_dir_exists, true);
 
     fs::remove_dir_all("temp_test_dir_5")?;

@@ -121,7 +121,8 @@ fn create_gitbom_directory() -> std::io::Result<()> {
 
 fn create_gitbom_file() -> std::io::Result<()> {
     let file_path = format!("{}/gitbom_temp", GITBOM_DIRECTORY);
-    File::create(file_path)?;
+    let mut gitbom_file = File::create(file_path)?;
+    gitbom_file.write_all("gitoid:blob:sha1\n".to_string().as_bytes())?;
     Ok(())
 }
 
