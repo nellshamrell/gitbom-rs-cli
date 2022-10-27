@@ -51,7 +51,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             match generated_gitoid {
                 Ok(gitoid) => {
-                    println!("Generated GitOid: {}", gitoid.hash());
+                    println!("Generated {:?} GitOid: {}", gitoid.hash_algorithm(), gitoid.hash());
                     let gitoid_directories = create_gitoid_directory(&gitoid)?;
                     write_gitoid_file(&gitoid, gitoid_directories)?;
                     write_gitbom_file(&gitoid)?;
@@ -180,7 +180,7 @@ fn hash_gitbom_file() -> Result<(), gitoid::Error> {
         Err(e) => return Err(e)
     };
 
-    println!("GitOid for GitBOM file: {}", gitoid.hash());
+    println!("GitOid for {:?} GitBOM file: {}", gitoid.hash_algorithm(), gitoid.hash());
 
     let gitoid_directories = create_gitoid_directory(&gitoid)?;
 
