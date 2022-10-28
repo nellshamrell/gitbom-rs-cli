@@ -49,17 +49,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let file_contents = fs::read_to_string(file)?;
 
-            let generated_sha1_gitoid = create_gitoid_for_file(&file_contents, HashAlgorithm::Sha1);
-            println!("Generated {:?} GitOid: {}", generated_sha1_gitoid.hash_algorithm(), generated_sha1_gitoid.hash());
-            let gitoid_directories = create_gitoid_directory(&generated_sha1_gitoid)?;
-            write_gitoid_file(&generated_sha1_gitoid, gitoid_directories)?;
-            write_gitbom_file(&generated_sha1_gitoid, generated_sha1_gitoid.hash_algorithm())?;
-
-            let generated_sha256_gitoid = create_gitoid_for_file(&file_contents, HashAlgorithm::Sha256);
-            println!("Generated {:?} GitOid: {}", generated_sha256_gitoid.hash_algorithm(), generated_sha256_gitoid.hash());
-            let gitoid_directories = create_gitoid_directory(&generated_sha256_gitoid)?;
-            write_gitoid_file(&generated_sha256_gitoid, gitoid_directories)?;
-            write_gitbom_file(&generated_sha256_gitoid, HashAlgorithm::Sha256)?;
+            generate_and_write_gitoid(&file_contents, HashAlgorithm::Sha1)?;
+            generate_and_write_gitoid(&file_contents, HashAlgorithm::Sha256)?;
 
             hash_gitbom_file(HashAlgorithm::Sha1)?;
             hash_gitbom_file(HashAlgorithm::Sha256)?;
@@ -183,5 +174,16 @@ fn hash_gitbom_file(hash_algorithm: HashAlgorithm) -> Result<(), gitoid::Error> 
     fs::copy(&gitbom_file_path, new_file_path)?;
 
     fs::remove_file(gitbom_file_path)?;
+    Ok(())
+}
+
+fn generate_and_write_gitoid(file_contents: &str, hash_algorithm: HashAlgorithm) -> std::io::Result<()> {
+    let generated_gitoid = create_gitoid_for_file(&file_contents, hash_algorithm);
+    println!("Generated {:?} GitOid: {}", generated_gitoid.hash_algorithm(), generated_gitoid.hash());
+    let gitoid_directories = create_gitoid_directory(&generated_gitoid)?;
+
+    write_gitoid_file(&generated_gitoid, gitoid_directories)?;
+    write_gitbom_file(&generated_gitoid, generated_gitoid.hash_algorithm())?;
+
     Ok(())
 }
