@@ -44,6 +44,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Bom { file } => {
             println!("Generating GitBOM for {}", file);
             create_gitbom_directory()?;
+            create_gitbom_file(HashAlgorithm::Sha1)?;
             create_gitbom_file(HashAlgorithm::Sha256)?;
 
             let file_contents = fs::read_to_string(file)?;
@@ -52,7 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("Generated {:?} GitOid: {}", generated_sha1_gitoid.hash_algorithm(), generated_sha1_gitoid.hash());
             let gitoid_directories = create_gitoid_directory(&generated_sha1_gitoid)?;
             write_gitoid_file(&generated_sha1_gitoid, gitoid_directories)?;
- //           write_gitbom_file(&generated_sha1_gitoid)?;
+            write_gitbom_file(&generated_sha1_gitoid, generated_sha1_gitoid.hash_algorithm())?;
 
             let generated_sha256_gitoid = create_gitoid_for_file(&file_contents, HashAlgorithm::Sha256);
             println!("Generated {:?} GitOid: {}", generated_sha256_gitoid.hash_algorithm(), generated_sha256_gitoid.hash());
@@ -60,6 +61,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             write_gitoid_file(&generated_sha256_gitoid, gitoid_directories)?;
             write_gitbom_file(&generated_sha256_gitoid, HashAlgorithm::Sha256)?;
 
+            hash_gitbom_file(HashAlgorithm::Sha1)?;
             hash_gitbom_file(HashAlgorithm::Sha256)?;
 
             Ok(())
@@ -170,7 +172,7 @@ fn write_gitbom_file(gitoid: &GitOid, hash_algorithm: HashAlgorithm) -> std::io:
 fn hash_gitbom_file(hash_algorithm: HashAlgorithm) -> Result<(), gitoid::Error> {
     let gitbom_file_path = format!("{}/gitbom_{}_temp", GITBOM_DIRECTORY, hash_algorithm);
     let file_contents = fs::read_to_string(gitbom_file_path.clone())?;
-    let generated_gitoid = create_gitoid_for_file(&file_contents, HashAlgorithm::Sha256);
+    let generated_gitoid = create_gitoid_for_file(&file_contents, hash_algorithm);
 
     println!("GitOid for {:?} GitBOM file: {}", generated_gitoid.hash_algorithm(), generated_gitoid.hash());
 
