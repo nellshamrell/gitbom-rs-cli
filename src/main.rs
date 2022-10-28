@@ -44,30 +44,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Bom { file } => {
             println!("Generating GitBOM for {}", file);
             create_gitbom_directory()?;
-            create_gitbom_file()?;
+            create_gitbom_file(HashAlgorithm::Sha256)?;
 
             let file_contents = fs::read_to_string(file)?;
 
             let generated_sha1_gitoid = create_gitoid_for_file(&file_contents, HashAlgorithm::Sha1);
             println!("Generated {:?} GitOid: {}", generated_sha1_gitoid.hash_algorithm(), generated_sha1_gitoid.hash());
-//            let gitoid_directories = create_gitoid_directory(&generated_sha1_gitoid)?;
-//            write_gitoid_file(&generated_sha1_gitoid, gitoid_directories)?;
+            let gitoid_directories = create_gitoid_directory(&generated_sha1_gitoid)?;
+            write_gitoid_file(&generated_sha1_gitoid, gitoid_directories)?;
  //           write_gitbom_file(&generated_sha1_gitoid)?;
 
             let generated_sha256_gitoid = create_gitoid_for_file(&file_contents, HashAlgorithm::Sha256);
             println!("Generated {:?} GitOid: {}", generated_sha256_gitoid.hash_algorithm(), generated_sha256_gitoid.hash());
             let gitoid_directories = create_gitoid_directory(&generated_sha256_gitoid)?;
             write_gitoid_file(&generated_sha256_gitoid, gitoid_directories)?;
-            write_gitbom_file(&generated_sha256_gitoid)?;
+            write_gitbom_file(&generated_sha256_gitoid, HashAlgorithm::Sha256)?;
 
-            hash_gitbom_file()?;
+            hash_gitbom_file(HashAlgorithm::Sha256)?;
 
             Ok(())
         },
         Commands::ArtifactTree { directory } => {
             println!("Generating GitBOM for {}", directory);
             create_gitbom_directory()?;
-            create_gitbom_file()?;
+            create_gitbom_file(HashAlgorithm::Sha256)?;
             
             let mut count = 0;
 
@@ -93,10 +93,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
 
            for gitoid in gitbom.get_oids() {
-               write_gitbom_file(&gitoid)?;
+               write_gitbom_file(&gitoid, HashAlgorithm::Sha256)?;
            } 
 
-            hash_gitbom_file()?;
+            hash_gitbom_file(HashAlgorithm::Sha256)?;
             println!("Generated GitBom for {} files", count);
             Ok(())
         }
@@ -116,8 +116,8 @@ fn create_gitbom_directory() -> std::io::Result<()> {
     Ok(())
 }
 
-fn create_gitbom_file() -> std::io::Result<()> {
-    let file_path = format!("{}/gitbom_temp", GITBOM_DIRECTORY);
+fn create_gitbom_file(hash_algorithm: HashAlgorithm) -> std::io::Result<()> {
+    let file_path = format!("{}/gitbom_{}_temp", GITBOM_DIRECTORY, hash_algorithm);
     let mut gitbom_file = File::create(file_path)?;
     gitbom_file.write_all("gitoid:blob:sha1\n".to_string().as_bytes())?;
     Ok(())
@@ -156,8 +156,8 @@ fn gitoid_file_path(gitoid_directories: HashMap<String, String>) -> String {
     return format!("{}/{}/{}/{}", GITBOM_DIRECTORY, OBJECTS_DIRECTORY, gitoid_directories["gitoid_shard"], gitoid_directories["rest_of_gitoid"]);
 }
 
-fn write_gitbom_file(gitoid: &GitOid) -> std::io::Result<()> {
-    let gitbom_file_path = format!("{}/gitbom_temp", GITBOM_DIRECTORY);
+fn write_gitbom_file(gitoid: &GitOid, hash_algorithm: HashAlgorithm) -> std::io::Result<()> {
+    let gitbom_file_path = format!("{}/gitbom_{}_temp", GITBOM_DIRECTORY, hash_algorithm);
     let mut gitbom_file = fs::OpenOptions::new()
         .write(true)
         .append(true)
@@ -167,8 +167,8 @@ fn write_gitbom_file(gitoid: &GitOid) -> std::io::Result<()> {
     Ok(())
 }
 
-fn hash_gitbom_file() -> Result<(), gitoid::Error> {
-    let gitbom_file_path = format!("{}/gitbom_temp", GITBOM_DIRECTORY);
+fn hash_gitbom_file(hash_algorithm: HashAlgorithm) -> Result<(), gitoid::Error> {
+    let gitbom_file_path = format!("{}/gitbom_{}_temp", GITBOM_DIRECTORY, hash_algorithm);
     let file_contents = fs::read_to_string(gitbom_file_path.clone())?;
     let generated_gitoid = create_gitoid_for_file(&file_contents, HashAlgorithm::Sha256);
 
