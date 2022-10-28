@@ -47,7 +47,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             create_gitbom_file()?;
 
             let file = File::open(file)?;
-            let generated_gitoid = create_gitoid_for_file(file);
+            let file_length = file.metadata()?.len();
+            let reader = BufReader::new(file);
+            let generated_gitoid = create_gitoid_for_file(file_length, reader, HashAlgorithm::Sha256);
 
             match generated_gitoid {
                 Ok(gitoid) => {
@@ -80,7 +82,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     continue;
                 } else {
                     let file = File::open(entry_clone.path())?;
-                    let generated_gitoid = create_gitoid_for_file(file);
+                    let file_length = file.metadata()?.len();
+                    let reader = BufReader::new(file);
+                    let generated_gitoid = create_gitoid_for_file(file_length, reader, HashAlgorithm::Sha256);
                     match generated_gitoid {
                         Ok(gitoid) => {
                             println!("Generated GitOid: {}", gitoid.hash());
@@ -126,10 +130,8 @@ fn create_gitbom_file() -> std::io::Result<()> {
     Ok(())
 }
 
-fn create_gitoid_for_file(file: File) -> Result<GitOid, gitoid::Error> {
-    let file_length = file.metadata()?.len();
-    let reader = BufReader::new(file);
-    GitOid::new_from_reader(HashAlgorithm::Sha256, Blob, reader, file_length as usize)
+fn create_gitoid_for_file(file_length: u64, reader: BufReader<File>, hash_algorithm: HashAlgorithm) -> Result<GitOid, gitoid::Error> {
+    GitOid::new_from_reader(hash_algorithm, Blob, reader, file_length as usize)
 }
 
 fn create_gitoid_directory(gitoid: &GitOid) -> std::io::Result<HashMap<String, String>> {
@@ -175,7 +177,9 @@ fn write_gitbom_file(gitoid: &GitOid) -> std::io::Result<()> {
 fn hash_gitbom_file() -> Result<(), gitoid::Error> {
     let gitbom_file_path = format!("{}/gitbom_temp", GITBOM_DIRECTORY);
     let gitbom_file = File::open(&gitbom_file_path)?;
-    let gitoid = match create_gitoid_for_file(gitbom_file) {
+    let file_length = gitbom_file.metadata()?.len();
+    let reader = BufReader::new(gitbom_file);
+    let gitoid = match create_gitoid_for_file(file_length, reader, HashAlgorithm::Sha256) {
         Ok(gitoid) => gitoid,
         Err(e) => return Err(e)
     };
