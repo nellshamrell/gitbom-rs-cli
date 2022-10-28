@@ -48,8 +48,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let file_contents = fs::read_to_string(file)?;
 
-            let generated_sha256_gitoid = create_gitoid_for_file(&file_contents, HashAlgorithm::Sha256);
+            let generated_sha1_gitoid = create_gitoid_for_file(&file_contents, HashAlgorithm::Sha1);
+            println!("Generated {:?} GitOid: {}", generated_sha1_gitoid.hash_algorithm(), generated_sha1_gitoid.hash());
+//            let gitoid_directories = create_gitoid_directory(&generated_sha1_gitoid)?;
+//            write_gitoid_file(&generated_sha1_gitoid, gitoid_directories)?;
+ //           write_gitbom_file(&generated_sha1_gitoid)?;
 
+            let generated_sha256_gitoid = create_gitoid_for_file(&file_contents, HashAlgorithm::Sha256);
             println!("Generated {:?} GitOid: {}", generated_sha256_gitoid.hash_algorithm(), generated_sha256_gitoid.hash());
             let gitoid_directories = create_gitoid_directory(&generated_sha256_gitoid)?;
             write_gitoid_file(&generated_sha256_gitoid, gitoid_directories)?;
@@ -78,7 +83,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let file_contents = fs::read_to_string(entry_clone.path())?;
 
                     let generated_gitoid = create_gitoid_for_file(&file_contents, HashAlgorithm::Sha256);
-                    println!("Generated GitOid: {}", generated_gitoid.hash());
+                    println!("Generated {:?} GitOid: {}", generated_gitoid.hash_algorithm(), generated_gitoid.hash());
                     let gitoid_directories = create_gitoid_directory(&generated_gitoid)?;
                     write_gitoid_file(&generated_gitoid, gitoid_directories)?;
                     gitbom.add(generated_gitoid);

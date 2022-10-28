@@ -70,7 +70,7 @@ fn generating_gitoid_files() -> Result<(), Box<dyn std::error::Error>> {
     cmd.current_dir("temp_test_dir_4");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("Generated GitOid: 99288e47fc18ca8301c2ab1fc67c6d176e344d4528c618705967f8191254bb17\nGenerated GitOid: 88737472dddbec36c85dc76803dd92c045a5d5c2a1d96c024d16e2fe92f5a734"));
+        .stdout(predicate::str::contains("Generated Sha256 GitOid: 99288e47fc18ca8301c2ab1fc67c6d176e344d4528c618705967f8191254bb17\nGenerated Sha256 GitOid: 88737472dddbec36c85dc76803dd92c045a5d5c2a1d96c024d16e2fe92f5a734"));
 
     cmd.assert()
         .success()
@@ -93,7 +93,7 @@ fn generating_gitoid_for_sha256_bom_file() -> Result<(), Box<dyn std::error::Err
     cmd.current_dir("temp_test_dir_5");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("GitOid for SHA256 GitBOM file: 056c617ab64860f6933e49cdf3abb35f742f17df7146648eb3b793612178ee87"));
+        .stdout(predicate::str::contains("GitOid for Sha256 GitBOM file: 056c617ab64860f6933e49cdf3abb35f742f17df7146648eb3b793612178ee87"));
 
     let gitoid_dir_exists = Path::new("temp_test_dir_5/.bom/objects/05/6c617ab64860f6933e49cdf3abb35f742f17df7146648eb3b793612178ee87").exists();
     assert_eq!(gitoid_dir_exists, true);

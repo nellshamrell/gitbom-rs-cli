@@ -103,7 +103,7 @@ fn generating_sha1_gitoid_file() -> Result<(), Box<dyn std::error::Error>> {
     cmd.current_dir("temp_test_dir_5");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("Generated SHA1 GitOid"));
+        .stdout(predicate::str::contains("Generated Sha1 GitOid"));
 
     fs::remove_dir_all("temp_test_dir_5")?;
     Ok(())
