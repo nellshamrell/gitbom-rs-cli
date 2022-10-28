@@ -121,7 +121,8 @@ fn create_gitbom_directory() -> std::io::Result<()> {
 fn create_gitbom_file(hash_algorithm: HashAlgorithm) -> std::io::Result<()> {
     let file_path = format!("{}/gitbom_{}_temp", GITBOM_DIRECTORY, hash_algorithm);
     let mut gitbom_file = File::create(file_path)?;
-    gitbom_file.write_all("gitoid:blob:sha1\n".to_string().as_bytes())?;
+    let header_text = format!("gitoid:blob:{}\n", hash_algorithm).to_lowercase();
+    gitbom_file.write_all(header_text.as_bytes())?;
     Ok(())
 }
 
