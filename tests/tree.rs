@@ -93,9 +93,9 @@ fn generating_gitoid_for_sha256_bom_file() -> Result<(), Box<dyn std::error::Err
     cmd.current_dir("temp_test_dir_5");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("GitOid for Sha256 GitBOM file: 5780f55500bd30463e4d9616559421fc512bd8debcdec4a23662763753f82895"));
+        .stdout(predicate::str::contains("e0b484d7b3c45c804eae87f2c15edb64123419729b341d6289f23cea89d23e04"));
 
-    let gitoid_dir_exists = Path::new("temp_test_dir_5/.bom/objects/57/80f55500bd30463e4d9616559421fc512bd8debcdec4a23662763753f82895").exists();
+    let gitoid_dir_exists = Path::new("temp_test_dir_5/.bom/objects/e0/b484d7b3c45c804eae87f2c15edb64123419729b341d6289f23cea89d23e04").exists();
     assert_eq!(gitoid_dir_exists, true);
 
     fs::remove_dir_all("temp_test_dir_5")?;
