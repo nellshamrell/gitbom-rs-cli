@@ -1,4 +1,5 @@
 #![feature(test)]
+#![feature(option_result_contains)]
 
 use assert_cmd::Command;
 use std::path::Path;

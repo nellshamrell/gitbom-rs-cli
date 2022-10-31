@@ -151,7 +151,6 @@ fn generating_sha1_bom_gitoid_file() -> Result<(), Box<dyn std::error::Error>> {
  
      
     let file_contents = fs::read_to_string("temp_test_dir_7/.bom/objects/8b/8e6bf1664bb88b8f979816fe2b73585a62580d")?;
-    println!("{}", file_contents);
     assert!(file_contents.contains("gitoid:blob:sha1\n"));
 
     fs::remove_dir_all("temp_test_dir_7")?;
