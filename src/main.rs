@@ -61,6 +61,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::ArtifactTree { directory } => {
             println!("Generating GitBOM for {}", directory);
             create_gitbom_directory()?;
+            create_gitbom_file(HashAlgorithm::Sha1)?;
             create_gitbom_file(HashAlgorithm::Sha256)?;
             
             let mut count = 0;
@@ -76,6 +77,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 } else {
                     let file_contents = fs::read_to_string(entry_clone.path())?;
 
+//                    let generated_sha1_gitoid = generate_and_write_gitoid(&file_contents, HashAlgorithm::Sha1)?;
                     let generated_gitoid = generate_and_write_gitoid(&file_contents, HashAlgorithm::Sha256)?;
                     gitbom.add(generated_gitoid);
                     count += 1;
@@ -87,6 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                write_gitbom_file(&gitoid, HashAlgorithm::Sha256)?;
            } 
 
+            hash_gitbom_file(HashAlgorithm::Sha1)?;
             hash_gitbom_file(HashAlgorithm::Sha256)?;
             println!("Generated GitBom for {} files", count);
             Ok(())

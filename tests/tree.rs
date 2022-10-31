@@ -68,6 +68,7 @@ fn generating_gitoid_files() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("gitbom-cli")?;
     cmd.arg("artifact-tree").arg("../tests/fixtures/directory_thing");
     cmd.current_dir("temp_test_dir_4");
+
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("Generated Sha256 GitOid: 99288e47fc18ca8301c2ab1fc67c6d176e344d4528c618705967f8191254bb17\nGenerated Sha256 GitOid: 88737472dddbec36c85dc76803dd92c045a5d5c2a1d96c024d16e2fe92f5a734"));
@@ -93,11 +94,29 @@ fn generating_gitoid_for_sha256_bom_file() -> Result<(), Box<dyn std::error::Err
     cmd.current_dir("temp_test_dir_5");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("e0b484d7b3c45c804eae87f2c15edb64123419729b341d6289f23cea89d23e04"));
+        .stdout(predicate::str::contains("GitOid for Sha256 GitBOM file: e0b484d7b3c45c804eae87f2c15edb64123419729b341d6289f23cea89d23e04"));
 
     let gitoid_dir_exists = Path::new("temp_test_dir_5/.bom/objects/e0/b484d7b3c45c804eae87f2c15edb64123419729b341d6289f23cea89d23e04").exists();
     assert_eq!(gitoid_dir_exists, true);
 
     fs::remove_dir_all("temp_test_dir_5")?;
+    Ok(())
+}
+
+#[test]
+fn generating_gitoid_for_sha1_bom_file() -> Result<(), Box<dyn std::error::Error>> {
+    fs::create_dir_all("temp_test_dir_6")?;
+
+    let mut cmd = Command::cargo_bin("gitbom-cli")?;
+    cmd.arg("artifact-tree").arg("../tests/fixtures/directory_thing");
+    cmd.current_dir("temp_test_dir_6");
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("GitOid for Sha1 GitBOM file: daa8845467f5d281d4d233a69af67b85dd50f9f0"));
+
+    let gitoid_dir_exists = Path::new("temp_test_dir_6/.bom/objects/da/a8845467f5d281d4d233a69af67b85dd50f9f0").exists();
+    assert_eq!(gitoid_dir_exists, true);
+
+    fs::remove_dir_all("temp_test_dir_6")?;
     Ok(())
 }
