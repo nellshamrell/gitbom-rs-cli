@@ -1,4 +1,3 @@
-use gitbom::GitBom;
 use gitoid::{HashAlgorithm, GitOid, ObjectType::Blob};
 use clap::{Parser, Subcommand};
 use std::collections::HashMap;
@@ -66,8 +65,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             
             let mut count = 0;
 
-            let gitbom = GitBom::new();
-
             // Generate GitOids for every file within directory
             for entry in WalkDir::new(directory) {
                 let entry_clone = entry?.clone();
@@ -77,17 +74,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 } else {
                     let file_contents = fs::read_to_string(entry_clone.path())?;
 
-//                    let generated_sha1_gitoid = generate_and_write_gitoid(&file_contents, HashAlgorithm::Sha1)?;
-                    let generated_gitoid = generate_and_write_gitoid(&file_contents, HashAlgorithm::Sha256)?;
-                    gitbom.add(generated_gitoid);
+                    generate_and_write_gitoid(&file_contents, HashAlgorithm::Sha1)?;
+                    generate_and_write_gitoid(&file_contents, HashAlgorithm::Sha256)?;
                     count += 1;
                 }
                 
             }
-
-           for gitoid in gitbom.get_oids() {
-               write_gitbom_file(&gitoid, HashAlgorithm::Sha256)?;
-           } 
 
             hash_gitbom_file(HashAlgorithm::Sha1)?;
             hash_gitbom_file(HashAlgorithm::Sha256)?;
