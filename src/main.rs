@@ -58,11 +58,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let sha256_gitoid = generate_and_write_gitoid(&file_contents, HashAlgorithm::Sha256)?;
             let sha256_gitbom = sha256_gitbom.add(sha256_gitoid);
 
-            for gitoid in sha1_gitbom.get_oids() {
+            for gitoid in sha1_gitbom.get_sorted_oids() {
                 write_gitbom_file(&gitoid, HashAlgorithm::Sha1)?
             }
 
-            for gitoid in sha256_gitbom.get_oids() {
+            for gitoid in sha256_gitbom.get_sorted_oids() {
                 write_gitbom_file(&gitoid, HashAlgorithm::Sha256)?
             }
 
@@ -101,11 +101,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
 
-            for gitoid in sha1_gitbom.get_oids() {
+            for gitoid in sha1_gitbom.get_sorted_oids() {
                 write_gitbom_file(&gitoid, HashAlgorithm::Sha1)?
             }
 
-            for gitoid in sha256_gitbom.get_oids() {
+            for gitoid in sha256_gitbom.get_sorted_oids() {
                 write_gitbom_file(&gitoid, HashAlgorithm::Sha256)?
             }
 
@@ -185,6 +185,7 @@ fn write_gitbom_file(gitoid: &GitOid, hash_algorithm: HashAlgorithm) -> std::io:
 fn hash_gitbom_file(hash_algorithm: HashAlgorithm) -> Result<(), gitoid::Error> {
     let gitbom_file_path = format!("{}/gitbom_{}_temp", GITBOM_DIRECTORY, hash_algorithm);
     let file_contents = fs::read_to_string(gitbom_file_path.clone())?;
+    print!("file_contents for {} gitbom file: {:?}", hash_algorithm, file_contents);
 
     let generated_gitoid = create_gitoid_for_file(&file_contents, hash_algorithm);
 
